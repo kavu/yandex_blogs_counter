@@ -1,35 +1,26 @@
 (ns solar.core
   (:require
-   [clojure.data.json :only [write-str] :as json]
-   [org.httpkit.server :only [run-server] :as http]
-   [ring.middleware.defaults :only [wrap-defaults api-defaults] :as rm]
-   [com.climate.claypoole :only [threadpool ncpus pmap] :as cp]))
+    [solar.search :only [search-all] :as search]
+    [clojure.data.json :only [write-str] :as json]
+    [org.httpkit.server :only [run-server] :as http-server]
+    [ring.middleware.defaults :only [wrap-defaults api-defaults] :as rm]))
 
-(defonce yandex-blogs-rss
-  "https://yandex.ru/blogs/rss/search?text=%s&ft=blog,comments&numdoc=10")
-
-(defonce app-content-type
+(defonce ^:private app-content-type
   {"Content-Type" "application/json; charset=utf-8"})
 
-(defonce response-template
+(defonce ^:private response-template
   {:status  200
    :headers app-content-type
    :body nil})
 
-; Yes, we'll have one global threadpool for all requests
-(def pool
-  (cp/threadpool (cp/ncpus)))
-
-; Our processing entry function
-(defn search
-  [data]
-  {:query data})
-
 (defn- process-search-request
-  [req]
-  (let [queries (-> req :params :q distinct)
-        data (cp/pmap pool search queries)]
-    (json/write-str data)))
+  [request]
+  (-> request
+    :params
+    :q
+    distinct
+    search/search-all
+    json/write-str))
 
 (defn- app
   [req]
@@ -40,5 +31,6 @@
 (defn -main
   [& args]
   (println "Starting Server!")
-  (http/run-server (rm/wrap-defaults app rm/api-defaults)
+  (http-server/run-server
+    (rm/wrap-defaults app rm/api-defaults)
     {:port 8080}))
