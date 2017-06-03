@@ -13,12 +13,19 @@
    :headers app-content-type
    :body nil})
 
-(defn- process-search-request
+(defn- get-clean-params-from
   [request]
   (-> request
     :params
     :q
-    distinct
+    vector
+    flatten
+    distinct))
+
+(defn- process-search-request
+  [request]
+  (-> request
+    get-clean-params-from
     search/search-all
     json/write-str))
 
