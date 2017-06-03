@@ -1,4 +1,5 @@
 (ns solar.core
+  (:gen-class)
   (:require
     [solar.search :only [search-all] :as search]
     [clojure.data.json :only [write-str] :as json]
