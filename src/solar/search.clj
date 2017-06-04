@@ -26,20 +26,19 @@
     :entries
     (map #(:link %))))
 
-(defn- transform-links-to-domains
-  [links]
-  (map #(-> %
-          urly/url-like
-          urly/host-of
-          psl/lookup
-          str)
-    links))
+(defn- link-to-domain
+  [link]
+  (-> link
+    urly/url-like
+    urly/host-of
+    psl/lookup
+    str))
 
 (defn search-all
   [queries]
   (let [links (cp/pmap pool get-links queries)]
-    (-> links
+    (->> links
       flatten
       distinct
-      transform-links-to-domains
+      (map link-to-domain)
       frequencies)))
