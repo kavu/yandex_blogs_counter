@@ -17,7 +17,6 @@
   [query]
   (fp/parse-feed (format yandex-blogs-rss query)))
 
-; Our processing entry function
 (defn- get-links
   [query]
   (->> query
